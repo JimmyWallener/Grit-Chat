@@ -1,37 +1,85 @@
 /*
 Prompt for users preferenced handle.
 Get current url.
-Change url to include # and change current document title with user handle
+If no handle is given, sets handle to Anonymous with an adjacent random number
 */
-let userId = prompt("Enter your name:",);
-let url = window.location.href;
-let changeUrl = (url, userId) => {
-    let new_url = url + '#' + userId;
-    window.history.pushState('data', 'Title', new_url);
-    document.title = "Grit-Chat: Logged in as " + userId;
+const url = window.location.href;
+let clientId = prompt("Enter your name:",);
+if (clientId == null || clientId == "") {
+    const max = 1;
+    const min = 10000;
+    clientId = "Anonymous" + Math.floor(Math.random() * (max - min) + min)
+}
+
+// Updates URL with prompted name
+let changeUrl = (url, id) => {
+    id = location.hash.slice(1);
+    let new_url = url + id;
+    window.history.pushState('data', new_url);
 };
-changeUrl(url, userId);
+changeUrl(url, clientId);
 
 // Set up peer connection using ID
-let peer = new Peer(userId, {
+let peer = new Peer(clientId, {
     host: 'glajan.com',
     port: 8443,
     path: '/myapp',
     secure: true
 });
 
-// 
-peer.on('open', peerOnConnection = (id) => {
+
+peer.on('open', connnectionSuccess = (id) => {
     document.querySelector('.my-peer-id').innerHTML = id;
+});
+peer.on('error', errorMsg = (error) => {
+    console.log(error);
+})
+
+
+// Refresh connected userlist every minute
+setInterval(() => {
+    refreshUserList(clientId);
+}, 3000 * 20);
+
+// Manually refresh userlist
+document.querySelector('.list-all-peers-button').addEventListener('click', () => {
+    refreshUserList(clientId);
 });
 
 
-let isEven = num => console.log(num % 2 == 0 ? 'Is Even' : 'Is Odd');
 
-function isOdd(num) {
-    let test = num % 2 == 0 ? 'Is Even' : 'Is Odd';
-    console.log(test);
-}
 
-isEven(2);
-isOdd(3);
+
+
+/*
+Functions here
+
+*/
+
+function refreshUserList(id){
+
+    peer.listAllPeers((peers) => {
+    console.log(peers);
+
+    const connectedUsers = document.querySelector('.peers');
+    const ul = document.createElement('ul');
+
+    //removing existing elements
+    while(connectedUsers.lastChild){
+        connectedUsers.removeChild(connectedUsers.lastChild);
+    }
+
+    peers.filter((users) => users !== id)
+         .forEach(user => {
+            console.log(user);
+            const li = document.createElement('li');
+            const button = document.createElement('button');
+            button.innerText = user;
+            button.classList.add('connect-btn');
+            button.classList.add(`ID-${user}`);
+            li.appendChild(button);
+            ul.appendChild(li);
+        });
+        connectedUsers.appendChild(ul);
+});
+};
