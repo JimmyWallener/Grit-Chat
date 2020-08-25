@@ -43,7 +43,7 @@ peer.on('error', errorMsg = (error) => {
 // Refresh connected userlist every minute
 setInterval(() => {
     refreshUserList(clientId);
-}, 3000 * 20);
+}, 30000 * 10);
 
 // Manually refresh userlist
 document.querySelector('.list-all-peers-button').addEventListener('click', () => {
