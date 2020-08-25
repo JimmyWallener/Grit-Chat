@@ -1,16 +1,18 @@
-let userHandle = prompt("Enter your name:",);
+/*
+Prompt for users preferenced handle.
+Get current url.
+Change url to include # and change current document title with user handle
+*/
+let userId = prompt("Enter your name:",);
 let url = window.location.href;
-function changeUrl(url, userHandle) {
-    var new_url = url + '#' + userHandle;
+let changeUrl = (url, userId) => {
+    let new_url = url + '#' + userId;
     window.history.pushState('data', 'Title', new_url);
-    document.title = "Grit-Chat: Logged in as " + userHandle;
-}
-changeUrl(url, userHandle);
-console.log(userHandle);
-const userId = location.hash.slice(1);
+    document.title = "Grit-Chat: Logged in as " + userId;
+};
+changeUrl(url, userId);
 
-console.log(userId);
-
+// Set up peer connection using ID
 let peer = new Peer(userId, {
     host: 'glajan.com',
     port: 8443,
@@ -18,9 +20,8 @@ let peer = new Peer(userId, {
     secure: true
 });
 
-
+// 
 peer.on('open', peerOnConnection = (id) => {
-    console.log('My peer id is: ' + id);
     document.querySelector('.my-peer-id').innerHTML = id;
 });
 
