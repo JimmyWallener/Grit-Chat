@@ -11,7 +11,11 @@ if (clientId == null || clientId == "") {
     clientId = "Anonymous" + Math.floor(Math.random() * (max - min) + min)
 }
 
-// Updates URL with prompted name
+/*  Updates URL with prompted name
+    If refreshing webpage for new username input, #clientId stacks in url.
+    Removes #clientId from url, leaving just https://url/path/
+    But still holds value for peer communication
+*/
 let changeUrl = (url, id) => {
     id = location.hash.slice(1);
     let new_url = url + id;
@@ -64,13 +68,13 @@ function refreshUserList(id){
     const connectedUsers = document.querySelector('.peers');
     const ul = document.createElement('ul');
 
-    //removing existing elements
+    //removing existing elements, needed for not stacking queries.
     while(connectedUsers.lastChild){
         connectedUsers.removeChild(connectedUsers.lastChild);
     }
 
     peers.filter((users) => users !== id)
-         .forEach(user => {
+         .map(user => {
             console.log(user);
             const li = document.createElement('li');
             const button = document.createElement('button');
