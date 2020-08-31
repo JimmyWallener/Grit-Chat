@@ -6,6 +6,7 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
 // Self invoked anonymous function (function () {})();
 (function () {
     let peer = null;
+    let conn = null;
     const url = window.location.href;
     let clientId = prompt("Enter your name:",);
     if (clientId == null || clientId == "") {
@@ -26,14 +27,16 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
     };
     changeUrl(url, clientId);
 
-    const connectToPeerClick = (el) => {
-        console.log(el);
-        let pId = el.target.textContent;
-        console.log(pId);
-        const conn = peer.connect(pId);
+    const connectToPeerClick = (e) => {
+        console.log(e);
+        const peerId = e.target.textContent;
+        conn && conn.close();
+        console.log(peerId);
+        conn = peer.connect(peerId);
         conn.on('open', () => {
             console.log("connection open");
-
+            const event = new CustomEvent('peer-changed', { detail: { peerId: peerId } });
+            document.dispatchEvent(event);
         });
         console.log(conn);
     };
@@ -95,7 +98,7 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
                     const li = document.createElement('li');
                     const button = document.createElement('button');
                     button.innerText = user;
-                    button.classList.add('connect-btn');
+                    button.classList.add('connect-button');
                     button.classList.add(`ID-${user}`);
                     button.addEventListener('click', connectToPeerClick);
                     li.appendChild(button);
@@ -104,4 +107,15 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
             connectedUsers.appendChild(ul);
         });
     };
+    document.addEventListener('peer-changed', (e) => {
+        const peerId = e.detail.peerId;
+        console.log(peerId);
+        document.querySelector('.name').innerHTML = peerId;
+        const btnConnected = document.querySelector(`.connect-button.ID-${peerId}`);
+        btnConnected.classList.add('connected');
+
+        console.log(btnConnected);
+
+
+    })
 })();
