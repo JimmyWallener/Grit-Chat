@@ -26,6 +26,18 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
     };
     changeUrl(url, clientId);
 
+    const connectToPeerClick = (e) => {
+        console.log(e);
+        const peerId = e.target.textcontent();
+        console.log(peerId);
+        const conn = peer.connect(peerId);
+        conn.on('open', () => {
+            console.log("connection open");
+
+        });
+        console.log(conn);
+    };
+
     // Set up peer connection using ID
     peer = new Peer(clientId, {
         host: 'glajan.com',
@@ -63,6 +75,7 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
     
     */
 
+
     function refreshUserList(id) {
 
         peer.listAllPeers((peers) => {
@@ -84,6 +97,7 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
                     button.innerText = user;
                     button.classList.add('connect-btn');
                     button.classList.add(`ID-${user}`);
+                    button.addEventListener('click', connectToPeerClick);
                     li.appendChild(button);
                     ul.appendChild(li);
                 });
