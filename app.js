@@ -86,11 +86,11 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
 
             const connectedUsers = document.querySelector('.peers');
             const ul = document.createElement('ul');
-
+            connectedUsers.firstChild && connectedUsers.firstChild.remove();
             //removing existing elements, needed for not stacking queries.
-            while (connectedUsers.lastChild) {
+            /* while (connectedUsers.lastChild) {
                 connectedUsers.removeChild(connectedUsers.lastChild);
-            }
+            } */
 
             peers.filter((users) => users !== id)
                 .map(user => {
@@ -111,6 +111,9 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
         const peerId = e.detail.peerId;
         console.log(peerId);
         document.querySelector('.name').innerHTML = peerId;
+        document.querySelectorAll('connect-button.connected').forEach(e => {
+            e.classList.remove('.connected');
+        })
         const btnConnected = document.querySelector(`.connect-button.ID-${peerId}`);
         btnConnected.classList.add('connected');
 
