@@ -26,11 +26,11 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
     };
     changeUrl(url, clientId);
 
-    const connectToPeerClick = (e) => {
-        console.log(e);
-        const peerId = e.target.textcontent();
-        console.log(peerId);
-        const conn = peer.connect(peerId);
+    const connectToPeerClick = (el) => {
+        console.log(el);
+        let pId = el.target.textContent;
+        console.log(pId);
+        const conn = peer.connect(pId);
         conn.on('open', () => {
             console.log("connection open");
 
