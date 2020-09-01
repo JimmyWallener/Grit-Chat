@@ -25,28 +25,65 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
         let new_url = url + id;
         window.history.pushState('data', new_url);
     };
+
     changeUrl(url, clientId);
 
     const connectToPeerClick = (e) => {
-        console.log(e);
         const peerId = e.target.textContent;
         conn && conn.close();
-        console.log(peerId);
         conn = peer.connect(peerId);
         conn.on('open', () => {
             console.log("connection open");
             const event = new CustomEvent('peer-changed', { detail: { peerId: peerId } });
             document.dispatchEvent(event);
+            conn.on('data', (data) => {
+                printMessage(data, "them");
+            })
         });
-        console.log(conn);
     };
+    const peerOnConnection = (dataConnection) => {
+        conn && conn.close();
+        conn = dataConnection;
+
+        const event = new CustomEvent('peer-changed', { detail: { peerId: conn.peer } });
+        document.dispatchEvent(event);
+
+        conn.on('data', (data) => {
+            printMessage(data, "them");
+        })
+
+    }
+
+    function printMessage(message, writer) {
+        const msgDiv = document.querySelector('.messages');
+        const wrapperDiv = document.createElement('div');
+        const newMsgDiv = document.createElement('div');
+        newMsgDiv.innerText = message;
+        wrapperDiv.classList.add('message');
+        wrapperDiv.classList.add(writer);
+        wrapperDiv.appendChild(newMsgDiv);
+        msgDiv.appendChild(wrapperDiv);
+
+    }
+
 
     // Set up peer connection using ID
     peer = new Peer(clientId, {
         host: 'glajan.com',
         port: 8443,
         path: '/myapp',
-        secure: true
+        secure: true,
+        config: {
+            iceServers: [
+                { url: ["stun:eu-turn7.xirsys.com"] },
+                {
+                    username:
+                        "1FOoA8xKVaXLjpEXov-qcWt37kFZol89r0FA_7Uu_bX89psvi8IjK3tmEPAHf8EeAAAAAF9NXWZnbGFqYW4=",
+                    credential: "83d7389e-ebc8-11ea-a8ee-0242ac140004",
+                    url: "turn:eu-turn7.xirsys.com:80?transport=udp",
+                },
+            ],
+        },
     });
 
 
@@ -56,12 +93,13 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
     peer.on('error', errorMsg = (error) => {
         console.log(error);
     })
+    peer.on('connection', peerOnConnection);
 
 
     // Refresh connected userlist every minute
     setInterval(() => {
         refreshUserList(clientId);
-    }, 30000 * 10);
+    }, 30000 * 5);
 
     // Manually refresh userlist
     document.querySelector('.list-all-peers-button').addEventListener('click', () => {
@@ -69,7 +107,13 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
     });
 
 
+    document.querySelector('.send-new-message-button').addEventListener('click', () => {
+        const msg = document.querySelector('.new-message').value;
+        conn.send(msg);
 
+        printMessage(msg, "me");
+
+    });
 
 
 
@@ -82,7 +126,7 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
     function refreshUserList(id) {
 
         peer.listAllPeers((peers) => {
-            console.log(peers);
+
 
             const connectedUsers = document.querySelector('.peers');
             const ul = document.createElement('ul');
@@ -94,7 +138,6 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
 
             peers.filter((users) => users !== id)
                 .map(user => {
-                    console.log(user);
                     const li = document.createElement('li');
                     const button = document.createElement('button');
                     button.innerText = user;
@@ -109,16 +152,15 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
     };
     document.addEventListener('peer-changed', (e) => {
         const peerId = e.detail.peerId;
-        console.log(peerId);
         document.querySelector('.name').innerHTML = peerId;
         document.querySelectorAll('connect-button.connected').forEach(e => {
             e.classList.remove('.connected');
         })
         const btnConnected = document.querySelector(`.connect-button.ID-${peerId}`);
-        btnConnected.classList.add('connected');
-
-        console.log(btnConnected);
+        btnConnected && btnConnected.classList.add('connected');
 
 
-    })
+
+    });
+
 })();
