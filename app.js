@@ -9,6 +9,7 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
   let conn = null;
   const inputField = document.querySelector(".new-message");
   const url = window.location.href;
+  let mediaConn = null;
 
   let clientId = prompt("Enter your name:");
   if (clientId == null || clientId == "") {
@@ -58,6 +59,17 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
       printMessage(data, "them");
     });
   };
+  const peerOnCall = (ic) => {
+    mediaConn && mediaConn.close();
+
+    navigator.mediaDevices
+      .getUserMedia({ audio: true, video: true })
+      .then((stream) => {
+        mediaConn = ic;
+        ic.answer(stream);
+        mediaConn.on("stream", mediaConnectionOnStream);
+      });
+  };
 
   // Set up peer connection using ID
   peer = new Peer(clientId, {
@@ -65,17 +77,19 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
     port: 8443,
     path: "/myapp",
     secure: true,
-    config: {
-      iceServers: [
-        { url: ["stun:eu-turn7.xirsys.com"] },
-        {
-          username:
-            "1FOoA8xKVaXLjpEXov-qcWt37kFZol89r0FA_7Uu_bX89psvi8IjK3tmEPAHf8EeAAAAAF9NXWZnbGFqYW4=",
-          credential: "83d7389e-ebc8-11ea-a8ee-0242ac140004",
-          url: "turn:eu-turn7.xirsys.com:80?transport=udp",
-        },
-      ],
-    },
+    //config: {
+    //  iceServers: [
+    //   {
+    //     url: ["stun:eu-turn7.xirsys.com"],
+    //    },
+    //    {
+    //      username:
+    //        "1FOoA8xKVaXLjpEXov-qcWt37kFZol89r0FA_7Uu_bX89psvi8IjK3tmEPAHf8EeAAAAAF9NXWZnbGFqYW4=",
+    //      credential: "83d7389e-ebc8-11ea-a8ee-0242ac140004",
+    //      url: "turn:eu-turn7.xirsys.com:80?transport=udp",
+    //    },
+    //  ],
+    //},
   });
 
   peer.on(
@@ -90,6 +104,7 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
       console.log(error);
     })
   );
+  peer.on("call", peerOnCall);
   peer.on("connection", peerOnConnection);
 
   // Refresh connected userlist every minute
@@ -144,6 +159,7 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
     wrapperDiv.classList.add(writer);
     wrapperDiv.appendChild(newMsgDiv);
     msgDiv.appendChild(wrapperDiv);
+    msgDiv.scrollTo(0, msgDiv.scrollHeight);
   }
 
   function refreshUserList(id) {
@@ -179,5 +195,56 @@ If no handle is given, sets handle to Anonymous with an adjacent random number
     });
     const btnConnected = document.querySelector(`.connect-button.ID-${peerId}`);
     btnConnected && btnConnected.classList.add("connected");
+
+    const video = document.querySelector(".video-container.them");
+    video.classList.add("connected");
+    video.querySelector(".stop").classList.remove("active");
+    video.querySelector(".start").classList.add("active");
   });
+
+  navigator.mediaDevices
+    .getUserMedia({ audio: true, video: true })
+    .then((stream) => {
+      const video = document.querySelector(".video-container.me video");
+
+      video.srcObject = stream;
+    });
+  // display videofeed in container
+  const mediaConnectionOnStream = (stream) => {
+    const video = document.querySelector(".video-container.them video");
+
+    video.srcObject = stream;
+  };
+  // Start video call
+  const startVideoCall = () => {
+    const video = document.querySelector(".video-container.them");
+    const startButton = video.querySelector(".start");
+    const stopButton = video.querySelector(".stop");
+    startButton.classList.remove("active");
+    stopButton.classList.add("active");
+
+    navigator.mediaDevices
+      .getUserMedia({ audio: true, video: true })
+      .then((stream) => {
+        mediaConn = peer.call(conn.peer, stream);
+        mediaConn.on("stream", mediaConnectionOnStream);
+      });
+  };
+  // Stop video call
+  const stopVideoCall = () => {
+    mediaConn && mediaConn.close();
+    const video = document.querySelector(".video-container.them");
+    const startButton = video.querySelector(".start");
+    const stopButton = video.querySelector(".stop");
+    stopButton.classList.remove("active");
+    startButton.classList.add("active");
+  };
+  //eventlistener for starting the call
+  document
+    .querySelector(".video-container.them .start")
+    .addEventListener("click", startVideoCall);
+  // eventlistener for stopping the call
+  document
+    .querySelector(".video-container.them .stop")
+    .addEventListener("click", stopVideoCall);
 })();
